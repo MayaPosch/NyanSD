@@ -4,7 +4,9 @@ NyanSD (Nyanko Service Discovery) is a simple yet versatile protocol aimed at pr
 
 ## Reference implementation ##
 
-This repository contains the C++-based reference implementation of the protocol. Using the provided Makefile in the root of the project the entire project (library, client and server) can be built by executing:
+This repository contains the C++-based reference implementation of the protocol. It requires a C++11 capable compiler and the LibPoco dependency to be installed.
+
+Using the provided Makefile in the root of the project the entire project (library, client and server) can be built by executing:
 
 `make` 
 
@@ -63,6 +65,10 @@ int main() {
 </pre>
 
 The server can contain a large number of service records, none of which have to be running on that particular host, but can be elsewhere on the network too. See the protocol notes in the next section for further details.
+
+## Building ##
+
+In order to 
 
 ## Protocol ##
 
