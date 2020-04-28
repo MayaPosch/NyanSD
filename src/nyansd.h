@@ -56,8 +56,6 @@ class NyanSD {
 	static void clientHandler(uint16_t port);
 	
 public:
-	static void init();
-	static void finish();
 	static bool sendQuery(uint16_t port, std::vector<NYSD_query> queries, 
 										std::vector<NYSD_service> &responses);
 	static bool addService(NYSD_service service);

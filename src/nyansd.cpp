@@ -10,15 +10,6 @@
 
 #include "nyansd.h"
 
-/* #ifdef _WIN32
-#include "winsock2.h"
-#else
-#include <unistd.h> 
-#include <sys/socket.h> 
-#include <arpa/inet.h> 
-#endif */
-
-
 #include <iostream>
 #include <map>
 
@@ -27,33 +18,11 @@
 #include <Poco/Net/DNS.h>
 
 
-/* #ifndef _WIN32
-typedef SOCKET int;
-#endif */
-
-
 // Static variables.
 std::vector<NYSD_service> NyanSD::services;
 std::mutex NyanSD::servicesMutex;
 std::atomic<bool> NyanSD::running{false};
 std::thread NyanSD::handler;
-
-
-// --- INIT ---
-void NyanSD::init() {
-/* #ifdef _WIN32
-	WSADATA wsaData;
-	WSAStartup(MAKEWORD(2, 2), &wsaData);
-#endif */
-}
-
-
-// --- FINISH ---
-void NyanSD::finish() {
-/* #ifdef _WIN32
-	WSACleanup();
-#endif */
-}
 
 
 // --- SEND QUERY ---
