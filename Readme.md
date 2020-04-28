@@ -66,9 +66,6 @@ int main() {
 
 The server can contain a large number of service records, none of which have to be running on that particular host, but can be elsewhere on the network too. See the protocol notes in the next section for further details.
 
-## Building ##
-
-In order to 
 
 ## Protocol ##
 
