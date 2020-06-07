@@ -61,6 +61,9 @@ public:
 	static bool addService(NYSD_service service);
 	static bool startListener(uint16_t port);
 	static bool stopListener();
+	
+	static std::string ipv4_uintToString(uint32_t ipv4);
+	static uint32_t ipv4_stringToUint(std::string ipv4);
 };
 
 

@@ -235,7 +235,7 @@ bool NyanSD::stopListener() {
 }
 
 
-std::string ipv4_uintToString(uint32_t ipv4) {
+std::string NyanSD::ipv4_uintToString(uint32_t ipv4) {
 	std::string out;
 	for (int i = 0; i < 4; ++i) {
 		out += std::to_string(*((uint8_t*) &ipv4));
@@ -246,7 +246,7 @@ std::string ipv4_uintToString(uint32_t ipv4) {
 }
 
 
-uint32_t ipv4_stringToUint(std::string ipv4) {
+uint32_t NyanSD::ipv4_stringToUint(std::string ipv4) {
 	// String should have the format: DD.DD.DD.DD, where 'DD' is a value between 0-255.
 	std::cout << "IP to convert: " << ipv4 << std::endl;
 	uint32_t out;

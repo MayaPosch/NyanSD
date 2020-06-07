@@ -26,7 +26,8 @@ int main() {
 	std::cout << "Received " << responses.size() << " responses." << std::endl;
 	for (int i = 0; i < responses.size(); ++i) {
 		std::cout << "Got service " << responses[i].service << " on host " << responses[i].hostname
-					<< ", IP " << responses[i].ipv4 << ", port " << (uint16_t) responses[i].port << std::endl;
+					<< ", IP " << NyanSD::ipv4_uintToString(responses[i].ipv4) 
+					<< ", port " << (uint16_t) responses[i].port << std::endl;
 	}
 	
 	std::cout << "All done." << std::endl;
