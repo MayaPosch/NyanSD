@@ -90,7 +90,8 @@ A service section has the following structure:
 
 <pre>
 uint8		S
-uint8(4)	IP address of service host.
+uint8(4)	IPv4 address of service host.
+uint8(39)	IPv6 address of service host.
 uint16		Length of hostname.
 uint8(*)	Hostname.
 uint16		Port of the service.
@@ -103,7 +104,7 @@ How many service records will be returned by a single NyanSD server depends both
 
 ## 3. Reference implementation ##
 
-The NyanSD reference implementation of NYSD is to be based around the following technologies:
+The NyanSD reference implementation of NYSD is based around the following technologies:
 
 * C++
 * LibPOCO (networking support)
