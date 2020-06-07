@@ -68,8 +68,6 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 	udpsocket.setBroadcast(true);
 	Poco::Net::SocketAddress sa("255.255.255.255", port);
 	udpsocket.sendTo(msg.data(), msg.length(), sa);
-	
-	std::cout << "Sent message: \n" << std::hex << msg << std::endl;
 	 
 	// Listen for responses for 500 milliseconds.
 	// FIXME: should use a listening loop here, maybe bind() and poll()?
