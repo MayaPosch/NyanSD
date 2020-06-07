@@ -120,7 +120,7 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 		std::cout << "Found message with length: " << len << std::endl;
 		
 		type = *((uint8_t*) &buffer[index++]);		
-		std::cout << "Message type: " << std::hex << (uint16_t) type << std::endl;
+		std::cout << "Message type: " << (uint16_t) type << std::endl;
 		
 		if (type != NYSD_MESSAGE_TYPE_RESPONSE) {
 			std::cout << "Not a response message type. Skipping..." << std::endl;
