@@ -238,7 +238,7 @@ bool NyanSD::stopListener() {
 std::string NyanSD::ipv4_uintToString(uint32_t ipv4) {
 	std::string out;
 	for (int i = 0; i < 4; ++i) {
-		out += std::to_string(*((uint8_t*) &ipv4));
+		out += std::to_string(*(((uint8_t*) &ipv4) + i));
 		if (i < 3) { out += "."; }
 	}
 	
