@@ -34,6 +34,7 @@ enum NYSD_protocol {
 
 struct NYSD_service {
 	uint32_t ipv4 = 0;
+	std::string ipv6;
 	uint16_t port = 0;
 	std::string hostname;
 	std::string service;

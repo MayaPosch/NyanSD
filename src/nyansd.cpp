@@ -141,6 +141,9 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 			uint32_t ipv4 = *((uint32_t*) &buffer[index]);
 			index += 4;
 			
+			std::string ipv6 = std::string(buffer.begin() + index, buffer.begin() + (index + 39));
+			index += 39;
+			
 			uint16_t hostlen = *((uint16_t*) &buffer[index]);
 			index += 2;
 			
@@ -164,6 +167,7 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 			
 			NYSD_service sv;
 			sv.ipv4 = ipv4;
+			sv.ipv6 = ipv6;
 			sv.port = port;
 			sv.hostname = hostname;
 			sv.service = svname;
@@ -266,15 +270,23 @@ uint32_t NyanSD::ipv4_stringToUint(std::string ipv4) {
 
 
 // --- REMOTE TO LOCAL IP ---
-Poco::Net::IPAddress remoteToLocalIP(Poco::Net::SocketAddress &sa) {
+bool remoteToLocalIP(Poco::Net::SocketAddress &sa, uint32_t &ipv4, std::string &ipv6) {
 	std::map<unsigned, Poco::Net::NetworkInterface> map = Poco::Net::NetworkInterface::map(true, false);
 	std::map<unsigned, Poco::Net::NetworkInterface>::const_iterator it = map.begin();
 	std::map<unsigned, Poco::Net::NetworkInterface>::const_iterator end = map.end();
 
-	if (sa.family() != Poco::Net::IPAddress::IPv4) { return Poco::Net::IPAddress(); }
+	bool isIPv6 = true;
+	if (sa.family() == Poco::Net::IPAddress::IPv4) { isIPv6 = false; }
+	
 	std::string addr = sa.toString();
 	std::cout << "Sender was IP: " << addr << std::endl;
-	addr.erase(addr.find_last_of('.') + 1);
+	if (isIPv6) {
+		addr.erase(addr.find_last_of(':') + 1);
+	}
+	else {
+		addr.erase(addr.find_last_of('.') + 1);
+	}
+	
 	std::cout << "LAN base IP: " << addr << std::endl;
 	for (; it != end; ++it) {
 		const std::size_t count = it->second.addressList().size();
@@ -283,14 +295,37 @@ Poco::Net::IPAddress remoteToLocalIP(Poco::Net::SocketAddress &sa) {
 			std::cout << "Checking IP: " << ip << std::endl;
 			if (addr.compare(0, addr.length(), ip, 0, addr.length()) == 0) {
 				std::cout << "Found IP: " << ip << std::endl;
-				return it->second.address(i);
+				if (isIPv6) {
+					ipv6 = it->second.address(i).toString();
+					
+					// Find first IPv4 address on this network interface.
+					for (int j = 0; j < count; ++j) {
+						if (it->second.address(j).af() == AF_INET) {
+							ipv4 = NyanSD::ipv4_stringToUint(it->second.address(j).toString());
+							return true;
+						}
+					}
+				}
+				else {
+					ipv4 = NyanSD::ipv4_stringToUint(it->second.address(i).toString());
+					
+					// Find first IPv6 address on this network interface.
+					for (int j = 0; j < count; ++j) {
+						if (it->second.address(j).af() == AF_INET6) {
+							ipv6 = it->second.address(j).toString();
+							return true;
+						}
+					}
+				}
+				
+				return false;
 			}
 		}
 	}
 	
 	std::cout << "LAN IP not found on interfaces." << std::endl;
 	
-	return Poco::Net::IPAddress();
+	return false;
 }
 
 
@@ -386,8 +421,21 @@ void NyanSD::clientHandler(uint16_t port) {
 							servicesBody += "S";
 							if (services[i].ipv4 == 0) {
 								// Fill in the IP address of the interface we are listening on.
-								uint32_t ip = ipv4_stringToUint(remoteToLocalIP(sender).toString());
-								servicesBody += std::string((char*) &ip, 4);
+								uint32_t ipv4;
+								std::string ipv6;
+								if (!remoteToLocalIP(sender, ipv4, ipv6)) {
+									std::cerr << "Failed to convert remote IP to local." << std::endl;
+									continue;
+								}
+								
+								if (ipv6.length() != 39) {
+									std::cerr << "Got wrong ipv6 string length: " << ipv6.length() 
+												<< std::endl;
+									continue;
+								}
+								
+								servicesBody += std::string((char*) &ipv4, 4);
+								servicesBody += ipv6;
 							}
 							else {
 								servicesBody += std::string((char*) &(services[i].ipv4), 4);
@@ -416,8 +464,21 @@ void NyanSD::clientHandler(uint16_t port) {
 						servicesBody += "S";
 						if (services[i].ipv4 == 0) {
 							// Fill in the IP address of the interface we are listening on.
-							uint32_t ip = ipv4_stringToUint(remoteToLocalIP(sender).toString());
-							servicesBody += std::string((char*) &ip, 4);
+							uint32_t ipv4;
+							std::string ipv6;
+							if (!remoteToLocalIP(sender, ipv4, ipv6)) {
+								std::cerr << "Failed to convert remote IP to local." << std::endl;
+								continue;
+							}
+							
+							if (ipv6.length() != 39) {
+								std::cerr << "Got wrong ipv6 string length: " << ipv6.length() 
+											<< std::endl;
+								continue;
+							}
+							
+							servicesBody += std::string((char*) &ipv4, 4);
+							servicesBody += ipv6;
 						}
 						else {
 							servicesBody += std::string((char*) &(services[i].ipv4), 4);
