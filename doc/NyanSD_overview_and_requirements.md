@@ -108,4 +108,5 @@ The NyanSD reference implementation of NYSD is based around the following techno
 
 * C++
 * LibPOCO (networking support)
+* ByteBauble (endian handling)
 
