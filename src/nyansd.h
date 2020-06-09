@@ -18,6 +18,8 @@
 #include <mutex>
 #include <string>
 
+#include "bytebauble.h"
+
 
 enum NYSD_message_type {
 	NYSD_MESSAGE_TYPE_BROADCAST	= 0x01,
@@ -53,6 +55,7 @@ class NyanSD {
 	static std::mutex servicesMutex;
 	static std::atomic<bool> running;
 	static std::thread handler;
+	static ByteBauble bb;
 	
 	static void clientHandler(uint16_t port);
 	

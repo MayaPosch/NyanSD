@@ -23,6 +23,7 @@ std::vector<NYSD_service> NyanSD::services;
 std::mutex NyanSD::servicesMutex;
 std::atomic<bool> NyanSD::running{false};
 std::thread NyanSD::handler;
+ByteBauble NyanSD::bb;
 
 
 // --- SEND QUERY ---
@@ -38,6 +39,7 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 	}
 				
 	// Compose the NYSD message.
+	BBEndianness he = bb.getHostEndian();
 	std::string msg = "NYANSD";
 	uint16_t len = 0;
 	uint8_t type = (uint8_t) NYSD_MESSAGE_TYPE_BROADCAST;
@@ -57,6 +59,7 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 	}
 	
 	len = body.length() + 1;	// Add one byte for the message type.
+	len = bb.toGlobal(len, he);
 	msg += std::string((char*) &len, 2);
 	msg += (char) type;
 	msg += body;
@@ -109,6 +112,7 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 		}
 		
 		len = *((uint16_t*) &buffer[index]);
+		len = bb.toHost(len, BB_LE);
 		index += 2;
 		
 		if (len > buffer.size() - (index)) {
@@ -139,12 +143,14 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 			
 			index++;
 			uint32_t ipv4 = *((uint32_t*) &buffer[index]);
+			ipv4 = bb.toHost(ipv4, BB_LE);
 			index += 4;
 			
 			std::string ipv6 = std::string(buffer.begin() + index, buffer.begin() + (index + 39));
 			index += 39;
 			
 			uint16_t hostlen = *((uint16_t*) &buffer[index]);
+			hostlen = bb.toHost(hostlen, BB_LE);
 			index += 2;
 			
 			std::string hostname = std::string(buffer.begin() + index, 
@@ -152,11 +158,13 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 			index += hostlen;
 			
 			uint16_t port = *((uint16_t*) &buffer[index]);
+			port = bb.toHost(port, BB_LE);
 			index += 2;
 			
 			uint8_t prot = *((uint8_t*) &buffer[index++]);
 			
 			uint16_t snlen = *((uint16_t*) &buffer[index]);
+			snlen = bb.toHost(snlen, BB_LE);
 			index += 2;
 			
 			std::string svname = std::string(buffer.begin() + index,
@@ -370,6 +378,7 @@ void NyanSD::clientHandler(uint16_t port) {
 			}
 			
 			uint16_t len = *((uint16_t*) &buffer[index]);
+			len = bb.toHost(len, BB_LE);
 			index += 2;
 			
 			if ((n - 8) != len) {
@@ -385,6 +394,7 @@ void NyanSD::clientHandler(uint16_t port) {
 			}
 			
 			// Parse message for queries.
+			BBEndianness he = bb.getHostEndian();
 			uint8_t rnum = *((char*) &buffer[index++]);		
 			std::cout << "Query count: " << (uint16_t) rnum << std::endl;
 			
@@ -434,6 +444,7 @@ void NyanSD::clientHandler(uint16_t port) {
 									continue;
 								}
 								
+								ipv4 = bb.toGlobal(ipv4, he);
 								servicesBody += std::string((char*) &ipv4, 4);
 								servicesBody += ipv6;
 							}
@@ -442,13 +453,16 @@ void NyanSD::clientHandler(uint16_t port) {
 							}
 							
 							uint16_t hlen = services[i].hostname.length();
+							hlen = bb.toGlobal(hlen, he);
 							servicesBody += std::string((char*) &hlen, 2);
 							servicesBody += services[i].hostname;
 							
-							servicesBody += std::string((char*) &(services[i].port), 2);
+							uint16_t port = bb.toGlobal(services[i].port, he);
+							servicesBody += std::string((char*) &port, 2);
 							servicesBody += (char) (services[i].protocol);
 							
 							uint16_t snlen = services[i].service.length();
+							snlen = bb.toGlobal(snlen, he);
 							servicesBody += std::string((char*) &snlen, 2);
 							servicesBody += services[i].service;
 							
@@ -477,6 +491,7 @@ void NyanSD::clientHandler(uint16_t port) {
 								continue;
 							}
 							
+							ipv4 = bb.toGlobal(ipv4, he);
 							servicesBody += std::string((char*) &ipv4, 4);
 							servicesBody += ipv6;
 						}
@@ -485,13 +500,16 @@ void NyanSD::clientHandler(uint16_t port) {
 						}
 						
 						uint16_t hlen = services[i].hostname.length();
+						hlen = bb.toGlobal(hlen, he);
 						servicesBody += std::string((char*) &hlen, 2);
 						servicesBody += services[i].hostname;
-						
-						servicesBody += std::string((char*) &(services[i].port), 2);
+							
+						uint16_t port = bb.toGlobal(services[i].port, he);
+						servicesBody += std::string((char*) &port, 2);
 						servicesBody += (char) (services[i].protocol);
 						
 						uint16_t snlen = services[i].service.length();
+						snlen = bb.toGlobal(snlen, he);
 						servicesBody += std::string((char*) &snlen, 2);
 						servicesBody += services[i].service;
 						
@@ -509,6 +527,7 @@ void NyanSD::clientHandler(uint16_t port) {
 				uint8_t type = (uint8_t) NYSD_MESSAGE_TYPE_RESPONSE;
 
 				msglen += servicesBody.length() + 1;	// Add 1 for service section counter.
+				msglen = bb.toGlobal(msglen, he);
 				msg += std::string((char*) &msglen, 2);
 				msg += (char) type;
 				msg += std::string((char*) &scount, 1);
