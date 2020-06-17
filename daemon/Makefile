@@ -9,7 +9,7 @@ STRIP = strip
 
 OUTPUT = nyansdd
 INCLUDE = -I $(TOP)/src
-LIB := -L ../lib -lnyansd -lPocoNet -lPocoUtil -lPocoFoundation -lstdc++fs -lnyansd
+LIB := -L -lnyansd -lPocoNet -lPocoUtil -lPocoFoundation -lstdc++fs
 CFLAGS := $(INCLUDE) -std=c++17 -g3
 
 # Check for MinGW and patch up POCO
