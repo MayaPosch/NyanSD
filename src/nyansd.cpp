@@ -414,7 +414,7 @@ void NyanSD::clientHandler(uint16_t port) {
 				
 				index++;
 				uint8_t prot = *((uint8_t*) &buffer[index++]);				
-				uint8_t qlen = *((uint16_t*) &buffer[index++]);
+				uint8_t qlen = *((uint8_t*) &buffer[index++]);
 				
 				std::string servicesBody;
 				uint8_t scount = 0;
