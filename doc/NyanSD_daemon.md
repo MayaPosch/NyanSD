@@ -35,13 +35,13 @@ name=ssld
 port=22
 protocol=tcp
 
-[ssl]
+[ssl2]
 name=ssld
 port=22
 protocol=udp
 </pre>
 
-The above example lists all of the possible properties. Of these, only the service name, the port number and the protocol (TCP, UDP or both) are required. The other properties are obtained from the host which the daemon runs on.
+The above example lists all of the possible properties. Of these, only the service name, the port number and the protocol (TCP, UDP or both) are required. The other properties are obtained from the host which the daemon runs on. Each bracketed section is required to have a unique name.
 
 *Note:* IPv6 address have be written out fully, without dropping any zeros or sections.
 
