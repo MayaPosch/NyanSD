@@ -23,22 +23,27 @@ A service file consists out of a simple file in INI format. It can contain many 
 
 <pre>
 [http]
+name=httpd
 port=80
 protocol=tcp
-host=htttp-server
+host=http-server
 ipv4=192.168.0.42
 ipv6=2001:0db8:0000:0000:0000:8a2e:0370:7334
 
 [ssl]
+name=ssld
 port=22
 protocol=tcp
 
 [ssl]
+name=ssld
 port=22
 protocol=udp
 </pre>
 
-The above example lists all of the possible properties. Of these, only the service name (bracketed), the port number and the protocol (TCP or UDP) are required. The other properties are obtained from the host which the daemon runs on.
+The above example lists all of the possible properties. Of these, only the service name, the port number and the protocol (TCP, UDP or both) are required. The other properties are obtained from the host which the daemon runs on.
+
+*Note:* IPv6 address have be written out fully, without dropping any zeros or sections.
 
 The usual purpose for adding the optional properties is to specify services which do not run on the local machine, but elsewhere in the network.
 
