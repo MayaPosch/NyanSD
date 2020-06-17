@@ -5,6 +5,7 @@
 GCC = g++
 MAKEDIR = mkdir -p
 RM = rm
+STRIP = strip
 
 OUTPUT = nyansdd
 INCLUDE = -I $(TOP)/src
@@ -15,6 +16,7 @@ CFLAGS := $(INCLUDE) -std=c++17 -g3
 # The OS variable is only set on Windows.
 ifdef OS
 	CFLAGS := $(CFLAGS) -U__STRICT_ANSI__ -DPOCO_WIN32_UTF8
+	EXTENSION := .exe
 	#LIB += -lws2_32
 else
 	LIB += -pthread
@@ -34,6 +36,8 @@ obj/%.o: %.cpp
 	
 bin/$(OUTPUT): $(OBJECTS)
 	$(GCC) -o $@ $(OBJECTS) $(LIB)
+	cp $@ $@.debug
+	$(STRIP) -S --strip-unneeded $@$(EXTENSION)
 
 clean:
 	$(RM) $(OBJECTS)
