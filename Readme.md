@@ -1,10 +1,24 @@
 # NyanSD #
 
-NyanSD (Nyanko Service Discovery) is a simple yet versatile protocol aimed at providing everything from small network-based applications to entire operating systems with the ability to perform network-based service discovery. While similar to DNS-SD and mDNS, it distinguishes itself by being exceedingly simple to implement 
+NyanSD (Nyanko Service Discovery) is a simple yet versatile protocol aimed at providing everything from small network-based applications to entire operating systems with the ability to perform network-based service discovery. While similar to DNS-SD and mDNS, it distinguishes itself by being exceedingly simple to implement.
+
+Both a daemon and client utility are available, as well as a reference client and server implementation.
+
+## Daemon ##
+
+The NyanSD daemon is found in the `daemon/` folder of the project. It can be used on any major platform, including Windows and Linux. 
+
+See [its documentation](doc/NyanSD_daemon.md) for further details on building and running it.
+
+## Client ##
+
+A simple client called `nyansd-browse` is provided in the `browse/` folder of the project. It can be built using the Makefile in that same folder and the resulting binary copied from the `browse/bin/` folder.
+
+This client will scan the network for any NyanSD daemons on the default port (11310) and report found services.
 
 ## Reference implementation ##
 
-This repository contains the C++-based reference implementation of the protocol. It requires a C++11 capable compiler and the LibPoco dependency to be installed.
+The C++-based reference implementation of the protocol. It requires a C++11 capable compiler and the LibPoco dependency to be installed.
 
 Using the provided Makefile in the root of the project the entire project (library, client and server) can be built by executing:
 
