@@ -1,0 +1,11 @@
+[Unit]
+Description=NyanSD service discovery server
+
+[Service]
+ExecStart=/usr/local/bin/nyansd
+User=pi
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

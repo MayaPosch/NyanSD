@@ -1,0 +1,5 @@
+#!/sbin/openrc-run
+
+supervisor=supervise-daemon
+command="/usr/local/bin/nyansd"
+command_args=""
