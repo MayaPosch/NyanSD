@@ -450,6 +450,7 @@ void NyanSD::clientHandler(uint16_t port) {
 							}
 							else {
 								servicesBody += std::string((char*) &(services[i].ipv4), 4);
+								servicesBody += services[i].ipv6;
 							}
 							
 							uint16_t hlen = services[i].hostname.length();
@@ -497,6 +498,7 @@ void NyanSD::clientHandler(uint16_t port) {
 						}
 						else {
 							servicesBody += std::string((char*) &(services[i].ipv4), 4);
+							servicesBody += services[i].ipv6;
 						}
 						
 						uint16_t hlen = services[i].hostname.length();
