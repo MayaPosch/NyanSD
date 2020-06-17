@@ -16,6 +16,7 @@
 #include <Poco/Net/DatagramSocket.h>
 #include <Poco/Net/NetworkInterface.h>
 #include <Poco/Net/DNS.h>
+#include <Poco/Buffer.h>
 
 
 // Static variables.
