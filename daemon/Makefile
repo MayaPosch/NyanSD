@@ -57,7 +57,7 @@ CONFDIR := /etc
 .PHONY: install
 install:
 	install -d $(DESTDIR)$(PREFIX)/bin/ \
-		-d $(DESTDIR)$(CONFDIR)/nyansd/
+		-d $(DESTDIR)$(CONFDIR)/nyansd/services
 	install -m 755 bin/$(OUTPUT) $(DESTDIR)$(PREFIX)/bin/
 
 .PHONY: install-systemd
