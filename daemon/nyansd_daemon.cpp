@@ -106,13 +106,6 @@ int main() {
 		}
 	}
 	
-	/* NYSD_service sv;
-	sv.port = 11310;
-	sv.protocol = NYSD_PROTOCOL_TCP;
-	sv.service = "HelloService";
-	
-	NyanSD::addService(sv); */
-	
 	std::cout << "Added services." << std::endl;
 	
 	// Set signal handler to allow ending the server with 
