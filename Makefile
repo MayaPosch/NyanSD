@@ -68,6 +68,12 @@ makedir:
 	$(MAKEDIR) obj/static/src
 	$(MAKEDIR) obj/shared/src
 	
+daemon:
+	$(MAKE) -C ./daemon
+	
+install-daemon:
+	$(MAKE) -C ./daemon install
+	
 apps: client server
 	
 client:
@@ -80,6 +86,9 @@ clean: clean-lib clean-client clean-server
 
 clean-lib:
 	$(RM) $(OBJECTS) $(SHARED_OBJECTS)
+	
+clean-daemon:
+	$(MAKE) -C ./daemon clean
 	
 clean-client:
 	$(MAKE) -C ./client clean
