@@ -44,7 +44,7 @@ int main() {
 	fullpath += "/NyanSD/services";
 	fs::path path(fullpath);
 #else
-	fs::path path = "/etc/nyansd/services/"
+	fs::path path = "/etc/nyansd/services/";
 #endif
 
 	if (!fs::exists(path)) {
