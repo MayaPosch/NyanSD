@@ -12,7 +12,7 @@
 #include "sarge.h"
 
 
-int main() {
+int main(int argc, char** argv) {
 	// Parse command line arguments.
 	Sarge sarge;
 	
@@ -21,8 +21,14 @@ int main() {
 	sarge.setArgument("h", "help", "Show this help message.", false);
 	sarge.setArgument("a", "all", "Show all found services (default).", false);
 	
+	if (!sarge.parseArguments(argc, argv)) {
+		std::cerr << "Couldn't parse arguments..." << std::endl;
+		return 1;
+	}
+	
 	if (sarge.exists("help")) {
 		sarge.printHelp();
+		return 0;
 	}
 	
 	NYSD_query query;
