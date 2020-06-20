@@ -5,3 +5,4 @@ lib/*
 *.exe
 *.so*
 *.a
+*/bin/*
