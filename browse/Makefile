@@ -42,3 +42,20 @@ bin/$(OUTPUT): $(OBJECTS)
 clean:
 	$(RM) $(OBJECTS)
 	
+# --- INSTALLATION ---
+
+PREFIX ?= /usr/local
+	
+# ifeq ($(PREFIX),/usr/local)
+	# CONFDIR := $(PREFIX)/etc
+# else
+	# CONFDIR := /etc
+# endif
+
+CONFDIR := /etc
+	
+.PHONY: install
+install:
+	install -d $(DESTDIR)$(PREFIX)/bin/
+	install -m 755 bin/$(OUTPUT) $(DESTDIR)$(PREFIX)/bin/
+	
