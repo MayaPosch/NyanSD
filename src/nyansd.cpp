@@ -166,8 +166,12 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 				ipv4 = bb.toHost(ipv4, BB_LE);
 				index += 4;
 				
-				std::string ipv6 = std::string(buffer + index, buffer + (index + 39));
-				index += 39;
+				uint8_t ipv6len = *((uint8_t*) &buffer[index++]);
+				
+				std::cout << "IPv6 string with length: " << (uint16_t) ipv6len << std::endl;
+				
+				std::string ipv6 = std::string(buffer + index, buffer + (index + ipv6len));
+				index += ipv6len;
 				
 				uint16_t hostlen = *((uint16_t*) &buffer[index]);
 				hostlen = bb.toHost(hostlen, BB_LE);
@@ -327,6 +331,10 @@ bool remoteToLocalIP(Poco::Net::SocketAddress &sa, uint32_t &ipv4, std::string &
 				if (isIPv6) {
 					ipv6 = it->second.address(i).toString();
 					
+					// Remove trailing '%<if>' section on certain OSes.
+					std::string::size_type st = ipv6.find_last_of('%');
+					if (st != std::string::npos) { ipv6.erase(st); }
+					
 					// Find first IPv4 address on this network interface.
 					for (int j = 0; j < count; ++j) {
 						if (it->second.address(j).af() == AF_INET) {
@@ -342,6 +350,11 @@ bool remoteToLocalIP(Poco::Net::SocketAddress &sa, uint32_t &ipv4, std::string &
 					for (int j = 0; j < count; ++j) {
 						if (it->second.address(j).af() == AF_INET6) {
 							ipv6 = it->second.address(j).toString();
+							
+							// Remove trailing '%<if>' section on certain OSes.
+							std::string::size_type st = ipv6.find_last_of('%');
+							if (st != std::string::npos) { ipv6.erase(st); }
+					
 							return true;
 						}
 					}
@@ -459,7 +472,7 @@ void NyanSD::clientHandler(uint16_t port) {
 									continue;
 								}
 								
-								if (ipv6.length() != 39) {
+								if (ipv6.length() > 39) {
 									std::cerr << "Got wrong ipv6 string length: " << ipv6.length() 
 												<< std::endl;
 									continue;
@@ -467,6 +480,8 @@ void NyanSD::clientHandler(uint16_t port) {
 								
 								ipv4 = bb.toGlobal(ipv4, he);
 								servicesBody += std::string((char*) &ipv4, 4);
+								uint8_t ipv6len = ipv6.length();
+								servicesBody += (char) ipv6len;
 								servicesBody += ipv6;
 							}
 							else {
@@ -507,7 +522,7 @@ void NyanSD::clientHandler(uint16_t port) {
 								continue;
 							}
 							
-							if (ipv6.length() != 39) {
+							if (ipv6.length() > 39) {
 								std::cerr << "Got wrong ipv6 string length: " << ipv6.length() 
 											<< std::endl;
 								continue;
@@ -515,6 +530,8 @@ void NyanSD::clientHandler(uint16_t port) {
 							
 							ipv4 = bb.toGlobal(ipv4, he);
 							servicesBody += std::string((char*) &ipv4, 4);
+							uint8_t ipv6len = ipv6.length();
+							servicesBody += (char) ipv6len;
 							servicesBody += ipv6;
 						}
 						else {
