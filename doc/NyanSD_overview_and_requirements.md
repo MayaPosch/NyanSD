@@ -91,6 +91,7 @@ A service section has the following structure:
 <pre>
 uint8		S
 uint8(4)	IPv4 address of service host.
+uint8		Length of IPv6 address.
 uint8(39)	IPv6 address of service host.
 uint16		Length of hostname.
 uint8(*)	Hostname.
