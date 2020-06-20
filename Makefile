@@ -74,6 +74,12 @@ daemon:
 install-daemon:
 	$(MAKE) -C ./daemon install
 	
+browse:
+	$(MAKE) -C ./browse
+	
+install-browse:
+	$(MAKE) -C ./browse install
+	
 apps: client server
 	
 client:
@@ -90,6 +96,9 @@ clean-lib:
 clean-daemon:
 	$(MAKE) -C ./daemon clean
 	
+clean-browse:
+	$(MAKE) -C ./browse clean
+	
 clean-client:
 	$(MAKE) -C ./client clean
 	
@@ -98,7 +107,8 @@ clean-server:
 
 PREFIX ?= /usr
 
-.PHONY: install client server
+.PHONY: install client server daemon browse
+
 install:
 	install -d $(DESTDIR)$(PREFIX)/lib/
 	install -m 644 lib/$(OUTPUT).a $(DESTDIR)$(PREFIX)/lib/
@@ -110,5 +120,4 @@ install:
 			rm $(OUTPUT).so; \
 		fi && \
 		ln -s $(OUTPUT).so.$(VERSION) $(OUTPUT).so
-
-
+	
