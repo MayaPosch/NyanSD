@@ -63,10 +63,10 @@ install:
 .PHONY: install-systemd
 install-systemd:
 	install -d $(DESTDIR)$(CONFDIR)/systemd/system/ 
-	sed ${SED_REPLACE} systemd/nyansd.service > $(DESTDIR)$(CONFDIR)/systemd/system/nyansd.service
+	cp daemon/systemd/nyansd.service $(DESTDIR)$(CONFDIR)/systemd/system/nyansd.service
 
 .PHONY: install-openrc
 install-openrc:
 	install -d $(DESTDIR)$(CONFDIR)/init.d/	
-	sed ${SED_REPLACE} openrc/nyansd > $(DESTDIR)$(CONFDIR)/init.d/nyansd
+	cp daemon/openrc/ny > $(DESTDIR)$(CONFDIR)/init.d/nymphcast
 	
