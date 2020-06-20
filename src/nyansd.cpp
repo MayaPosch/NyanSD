@@ -16,7 +16,6 @@
 #include <Poco/Net/DatagramSocket.h>
 #include <Poco/Net/NetworkInterface.h>
 #include <Poco/Net/DNS.h>
-#include <Poco/Buffer.h>
 
 
 // Static variables.
@@ -25,6 +24,12 @@ std::mutex NyanSD::servicesMutex;
 std::atomic<bool> NyanSD::running{false};
 std::thread NyanSD::handler;
 ByteBauble NyanSD::bb;
+
+
+struct ResponseStruct {
+	char* data;
+	uint32_t length;
+};
 
 
 // --- SEND QUERY ---
@@ -74,126 +79,141 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 	udpsocket.sendTo(msg.data(), msg.length(), sa);
 	 
 	// Listen for responses for 500 milliseconds.
-	// FIXME: should use a listening loop here, maybe bind() and poll()?
-	Poco::Buffer<char> buffer(2048);
 	Poco::Timespan ts(500000);	// 500 ms timeout.
 	int n;
-	try {
-		n = udpsocket.receiveBytes(buffer, 0, ts);
-	}
-	catch (Poco::TimeoutException &exc) {
-		std::cerr << "ReceiveBytes: " << exc.displayText() << std::endl;
-		udpsocket.close();
-		return false;
-	}
-	catch (...) {
-		std::cerr << "ReceiveBytes: Unknown exception." << std::endl;
-		return false;
+	Poco::Net::Socket::SocketList readList, writeList, exceptList;
+	readList.push_back(udpsocket);
+	std::vector<ResponseStruct> buffers;
+	while (Poco::Net::Socket::select(readList, writeList, exceptList, ts)) {
+		ResponseStruct rs;
+		rs.data = new char[2048];
+		try {
+			rs.length = udpsocket.receiveBytes(rs.data, 2048, 0);
+		}
+		catch (Poco::TimeoutException &exc) {
+			std::cerr << "ReceiveBytes: " << exc.displayText() << std::endl;
+			udpsocket.close();
+			return false;
+		}
+		catch (...) {
+			std::cerr << "ReceiveBytes: Unknown exception." << std::endl;
+			return false;
+		}
+		
+		std::cout << "Received message with length " << rs.length << std::endl;
+		
+		buffers.push_back(rs);
 	}
 	
 	// Close socket as we're done with the network side.
 	udpsocket.close();
 	
-	// Copy parsed responses into the 'responses' vector.
-	if (n < 8) {
-		// Nothing to do.
-		std::cout << "No responses were received." << std::endl;
-		return false;
-	}
+	std::cout << "Parsing " << buffers.size() << " response(s)..." << std::endl;
 	
-	// The received data can contain more than one response. Start parsing from the beginning until
-	// we are done.
-	int index = 0;
-	while (index < n) {
-		std::string signature = std::string(buffer.begin(), buffer.begin() + 6);
-		index += 6;
-		if (signature != "NYANSD") {
-			std::cerr << "Signature of message incorrect: " << signature << std::endl;
+	// Copy parsed responses into the 'responses' vector.
+	for (int i = 0; i < buffers.size(); ++i) {
+		int n = buffers[i].length;
+		if (n < 8) {
+			// Nothing to do.
+			std::cout << "No responses were received." << std::endl;
 			return false;
 		}
 		
-		len = *((uint16_t*) &buffer[index]);
-		len = bb.toHost(len, BB_LE);
-		index += 2;
-		
-		if (len > buffer.size() - (index)) {
-			std::cerr << "Insufficient data in buffer to finish parsing message: " << len << "/" 
-						<< (buffer.size() - (index + 6)) << std::endl;
-			return false;
-		}
-		
-		std::cout << "Found message with length: " << len << std::endl;
-		
-		type = *((uint8_t*) &buffer[index++]);		
-		std::cout << "Message type: " << (uint16_t) type << std::endl;
-		
-		if (type != NYSD_MESSAGE_TYPE_RESPONSE) {
-			std::cout << "Not a response message type. Skipping..." << std::endl;
-			continue;
-		}
-		
-		uint8_t rnum = *((char*) &buffer[index++]);		
-		std::cout << "Response count: " << (uint16_t) rnum << std::endl;
-		
-		// Service sections.
-		for (int i = 0; i < rnum; ++i) {
-			if (buffer[index] != 'S' != 0) {
-				std::cerr << "Invalid service section signature. Aborting parsing." << std::endl;
+		// The received data can contain more than one response. Start parsing from the beginning until
+		// we are done.
+		char* buffer = buffers[i].data;
+		int index = 0;
+		while (index < n) {
+			std::string signature = std::string(buffer, 6);
+			index += 6;
+			if (signature != "NYANSD") {
+				std::cerr << "Signature of message incorrect: " << signature << std::endl;
 				return false;
 			}
 			
-			index++;
-			uint32_t ipv4 = *((uint32_t*) &buffer[index]);
-			ipv4 = bb.toHost(ipv4, BB_LE);
-			index += 4;
-			
-			std::string ipv6 = std::string(buffer.begin() + index, buffer.begin() + (index + 39));
-			index += 39;
-			
-			uint16_t hostlen = *((uint16_t*) &buffer[index]);
-			hostlen = bb.toHost(hostlen, BB_LE);
+			len = *((uint16_t*) &buffer[index]);
+			len = bb.toHost(len, BB_LE);
 			index += 2;
 			
-			std::string hostname = std::string(buffer.begin() + index, 
-												buffer.begin() + (index + hostlen));
-			index += hostlen;
-			
-			uint16_t port = *((uint16_t*) &buffer[index]);
-			port = bb.toHost(port, BB_LE);
-			index += 2;
-			
-			uint8_t prot = *((uint8_t*) &buffer[index++]);
-			
-			uint16_t snlen = *((uint16_t*) &buffer[index]);
-			snlen = bb.toHost(snlen, BB_LE);
-			index += 2;
-			
-			std::string svname = std::string(buffer.begin() + index,
-												buffer.begin() + (index + snlen));
-			index += snlen;
-			
-			std::cout << "Adding service with name: " << svname << std::endl;
-			
-			NYSD_service sv;
-			sv.ipv4 = ipv4;
-			sv.ipv6 = ipv6;
-			sv.port = port;
-			sv.hostname = hostname;
-			sv.service = svname;
-			if (prot == NYSD_PROTOCOL_ALL) {
-				sv.protocol = NYSD_PROTOCOL_ALL;
-			}
-			else if (prot == NYSD_PROTOCOL_TCP) {
-				sv.protocol = NYSD_PROTOCOL_TCP;
-			}
-			else if (prot == NYSD_PROTOCOL_UDP) {
-				sv.protocol = NYSD_PROTOCOL_UDP;
+			if (len > buffers[i].length - (index)) {
+				std::cerr << "Insufficient data in buffer to finish parsing message: " << len << "/" 
+							<< (buffers[i].length - (index + 6)) << std::endl;
+				return false;
 			}
 			
-			responses.push_back(sv);
+			std::cout << "Found message with length: " << len << std::endl;
+			
+			type = *((uint8_t*) &buffer[index++]);		
+			std::cout << "Message type: " << (uint16_t) type << std::endl;
+			
+			if (type != NYSD_MESSAGE_TYPE_RESPONSE) {
+				std::cout << "Not a response message type. Skipping..." << std::endl;
+				continue;
+			}
+			
+			uint8_t rnum = *((char*) &buffer[index++]);		
+			std::cout << "Response count: " << (uint16_t) rnum << std::endl;
+			
+			// Service sections.
+			for (int i = 0; i < rnum; ++i) {
+				if (buffer[index] != 'S' != 0) {
+					std::cerr << "Invalid service section signature. Aborting parsing." << std::endl;
+					return false;
+				}
+				
+				index++;
+				uint32_t ipv4 = *((uint32_t*) &buffer[index]);
+				ipv4 = bb.toHost(ipv4, BB_LE);
+				index += 4;
+				
+				std::string ipv6 = std::string(buffer + index, buffer + (index + 39));
+				index += 39;
+				
+				uint16_t hostlen = *((uint16_t*) &buffer[index]);
+				hostlen = bb.toHost(hostlen, BB_LE);
+				index += 2;
+				
+				std::string hostname = std::string(buffer + index, buffer + (index + hostlen));
+				index += hostlen;
+				
+				uint16_t port = *((uint16_t*) &buffer[index]);
+				port = bb.toHost(port, BB_LE);
+				index += 2;
+				
+				uint8_t prot = *((uint8_t*) &buffer[index++]);
+				
+				uint16_t snlen = *((uint16_t*) &buffer[index]);
+				snlen = bb.toHost(snlen, BB_LE);
+				index += 2;
+				
+				std::string svname = std::string(buffer + index, buffer + (index + snlen));
+				index += snlen;
+				
+				std::cout << "Adding service with name: " << svname << std::endl;
+				
+				NYSD_service sv;
+				sv.ipv4 = ipv4;
+				sv.ipv6 = ipv6;
+				sv.port = port;
+				sv.hostname = hostname;
+				sv.service = svname;
+				if (prot == NYSD_PROTOCOL_ALL) {
+					sv.protocol = NYSD_PROTOCOL_ALL;
+				}
+				else if (prot == NYSD_PROTOCOL_TCP) {
+					sv.protocol = NYSD_PROTOCOL_TCP;
+				}
+				else if (prot == NYSD_PROTOCOL_UDP) {
+					sv.protocol = NYSD_PROTOCOL_UDP;
+				}
+				
+				responses.push_back(sv);
+			}
+			
+			std::cout << "Buffer: " << index << "/" << n << std::endl;
 		}
-		
-		std::cout << "Buffer: " << index << "/" << n << std::endl;
+			
+		delete[] buffers[i].data;
 	}
 	
 	return true;
