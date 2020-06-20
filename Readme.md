@@ -4,6 +4,16 @@ NyanSD (Nyanko Service Discovery) is a simple yet versatile protocol aimed at pr
 
 Both a daemon and client utility are available, as well as a reference client and server implementation.
 
+## Quick install ##
+
+To quickly build and install the NyanSD library, daemon and client utility, on Linux platforms the installation script can be used. After cloning the project to the target system, simply run from the project root:
+
+`sudo ./install_nyansd.sh`
+
+This will install the libPoco dependency automatically. A current (C++17) GCC/Clang compiler and utilities are expected to be already installed.
+
+Supported platforms: Linux with the apt, pacman or apk package managers. Supported service controllers: systemd & openrc.
+
 ## Daemon ##
 
 The NyanSD daemon is found in the `daemon/` folder of the project. It can be used on any major platform, including Windows and Linux. 
