@@ -296,7 +296,7 @@ uint32_t NyanSD::ipv4_stringToUint(std::string ipv4) {
 		op++;
 	}
 	
-	std::cout << "Converted IP: " << std::hex << out << std::endl;
+	std::cout << "Converted IP: " << std::showbase << std::hex << out << std::dec << std::endl;
 	
 	return out;
 }
@@ -421,7 +421,7 @@ void NyanSD::clientHandler(uint16_t port) {
 			}
 		
 			uint8_t type = *((uint8_t*) &buffer[index++]);		
-			std::cout << "Message type: " << std::hex << (uint16_t) type << std::endl;
+			std::cout << "Message type: " << (uint16_t) type << std::endl;
 			if (type != NYSD_MESSAGE_TYPE_BROADCAST) {
 				std::cout << "Not a broadcast message type. Skipping..." << std::endl;
 				continue;
@@ -440,8 +440,8 @@ void NyanSD::clientHandler(uint16_t port) {
 			// Query sections.
 			for (int i = 0; i < rnum; ++i) {
 				if (buffer[index] != 'Q') {
-					std::cerr << "Invalid query section signature: " << std::hex 
-								<< (uint16_t) buffer[index] 
+					std::cerr << "Invalid query section signature: " << std::showbase << std::hex 
+								<< (uint16_t) buffer[index] << std::dec
 								<< ". Aborting parsing." << std::endl;
 					continue;
 				}
