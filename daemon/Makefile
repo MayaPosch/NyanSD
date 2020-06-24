@@ -68,5 +68,5 @@ install-systemd:
 .PHONY: install-openrc
 install-openrc:
 	install -d $(DESTDIR)$(CONFDIR)/init.d/	
-	cp openrc/nyansd > $(DESTDIR)$(CONFDIR)/init.d/nyansd
+	cp openrc/nyansd $(DESTDIR)$(CONFDIR)/init.d/nyansd
 	
