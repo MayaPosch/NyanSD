@@ -41,7 +41,7 @@ if [ -d "/run/systemd/system" ]; then
 	sudo make -C daemon install-systemd
 	sudo ln -s /etc/systemd/system/nyansd.service /etc/systemd/system/multi-user.target.wants/nyansd.service
 else
-	sudo make -C src/server/ install-openrc
+	sudo make -C daemon install-openrc
 fi
 
 
