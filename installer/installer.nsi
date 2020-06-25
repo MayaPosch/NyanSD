@@ -80,6 +80,10 @@ Section "NyanSD"
 
 	; Store installation folder
 	WriteRegStr HKLM "Software\NyanSD" "" $INSTDIR
+	
+	; Create folder for service files.
+	SetShellVarContext all
+	CreateDirectory "$PROGRAMDATA\NyanSD\services"
 
 	; Create uninstaller
 	WriteUninstaller "$INSTDIR\uninstall.exe"
