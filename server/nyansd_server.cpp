@@ -32,6 +32,12 @@ int main() {
 	
 	NyanSD::addService(sv);
 	
+	sv.port = 80;
+	sv.protocol = NYSD_PROTOCOL_TCP;
+	sv.service = "HTTPService";
+	
+	NyanSD::addService(sv);
+	
 	std::cout << "Added services." << std::endl;
 	
 	// Set signal handler to allow ending the server with 
