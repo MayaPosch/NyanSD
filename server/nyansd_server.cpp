@@ -32,6 +32,14 @@ int main() {
 	
 	NyanSD::addService(sv);
 	
+	sv.port = 22;
+	sv.protocol = NYSD_PROTOCOL_TCP;
+	sv.service = "SSLService";
+	sv.ipv6 = "2001:0db8:0000:0000:0000:8a2e:0370:7334";
+	sv.ipv4 = NyanSD::ipv4_stringToUint("192.168.0.42");
+	
+	NyanSD::addService(sv);
+	
 	sv.port = 80;
 	sv.protocol = NYSD_PROTOCOL_TCP;
 	sv.service = "HTTPService";
