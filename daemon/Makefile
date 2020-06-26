@@ -36,7 +36,7 @@ obj/%.o: %.cpp
 	
 bin/$(OUTPUT): $(OBJECTS)
 	$(GCC) -o $@ $(OBJECTS) $(LIB)
-	cp $@ $@.debug
+	cp $@$(EXTENSION) $@.debug$(EXTENSION)
 	$(STRIP) -S --strip-unneeded $@$(EXTENSION)
 
 clean:
