@@ -17,7 +17,7 @@ CFLAGS := $(INCLUDE) -std=c++17 -g3
 ifdef OS
 	CFLAGS := $(CFLAGS) -U__STRICT_ANSI__ -DPOCO_WIN32_UTF8
 	EXTENSION := .exe
-	#LIB += -lws2_32
+	LIB += -ladvapi32
 else
 	LIB += -pthread
 endif
