@@ -106,7 +106,8 @@ Section "NyanSD"
 	; Install service.
 	SimpleSC::StopService "NyanSD" 1 30
 	SimpleSC::RemoveService "NyanSD"
-	SimpleSC::InstallService "NyanSD" "NyanSD Service" "272" "2" "$INSTDIR\nyansdd.exe" "" "" ""
+	SimpleSC::InstallService "NyanSD" "NyanSD" "16" "2" "$INSTDIR\nyansdd.exe" "" "" ""
+	SimpleSC::SetServiceDescription "NyanSD" "Nyanko Service Discovery"
 SectionEnd
 
 ;--------------------------------
