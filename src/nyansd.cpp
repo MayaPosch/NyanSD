@@ -485,7 +485,10 @@ void NyanSD::clientHandler(uint16_t port) {
 								servicesBody += ipv6;
 							}
 							else {
-								servicesBody += std::string((char*) &(services[i].ipv4), 4);
+								uint32_t ipv4 = bb.toGlobal(services[i].ipv4, he);
+								servicesBody += std::string((char*) &ipv4, 4);
+								uint8_t ipv6len = services[i].ipv6.length();
+								servicesBody += (char) ipv6len;
 								servicesBody += services[i].ipv6;
 							}
 							
@@ -535,7 +538,10 @@ void NyanSD::clientHandler(uint16_t port) {
 							servicesBody += ipv6;
 						}
 						else {
-							servicesBody += std::string((char*) &(services[i].ipv4), 4);
+							uint32_t ipv4 = bb.toGlobal(services[i].ipv4, he);
+							servicesBody += std::string((char*) &ipv4, 4);
+							uint8_t ipv6len = services[i].ipv6.length();
+							servicesBody += (char) ipv6len;
 							servicesBody += services[i].ipv6;
 						}
 						
