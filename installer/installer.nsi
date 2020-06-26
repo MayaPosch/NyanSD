@@ -31,7 +31,7 @@ SectionEnd */
 
 	;Name and file
 	Name "NyanSD"
-	OutFile "NyanSD_installer_0.1-alpha.exe"
+	OutFile "NyanSD_installer_0.1-alpha1.exe"
 
 	;Default installation folder
 	InstallDir "$PROGRAMFILES\NyanSD"
@@ -83,7 +83,7 @@ Section "NyanSD"
 	
 	; Create folder for service files.
 	SetShellVarContext all
-	CreateDirectory "$PROGRAMDATA\NyanSD\services"
+	CreateDirectory "$APPDATA\NyanSD\services"
 
 	; Create uninstaller
 	WriteUninstaller "$INSTDIR\uninstall.exe"
