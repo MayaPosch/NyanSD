@@ -83,6 +83,8 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 	for (uint32_t i = 0; i < interfaces.size(); ++i) {
 		Poco::Net::NetworkInterface ifc = interfaces[i];
 		
+		std::cout << "Checking interface " << i << " of " << interfaces.size() << " network interfaces." << std::endl;
+		
 		// FIXME: broadcast check always returns false. Seems useless.
 		/* if (!ifc.supportsBroadcast()) {
 			std::cerr << "Network interface does not support broadcast." << std::endl;
@@ -90,7 +92,7 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 		} */
 		
 		if (!ifc.supportsIPv4()) {
-			std::cerr << "Network interface does not support IPv4." << std::endl;
+			std::cerr << "Network interface " << i << " does not support IPv4." << std::endl;
 			continue; 
 		}
 		
