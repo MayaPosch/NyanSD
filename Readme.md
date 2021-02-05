@@ -65,7 +65,9 @@ int main() {
 }
 </pre>
 
-The above client composes a simple query to get all services available on the network, using port 11310. This means that all NyanSD listening clients on the network ('servers') that are listening on that port will receive the broadcast message.
+The above client composes a simple query to get all services available on the network, using port 11310. This means that all NyanSD listening clients on the network ('servers') that are listening on that port will receive the broadcast message. 
+
+**Note:** Since all network interfaces are scanned, if a service is reachable via more than one route, the same service's records will be returned more than once.
 
 The server:
 
