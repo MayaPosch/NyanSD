@@ -8,6 +8,10 @@
 */
 
 
+// Uncomment or define DEBUG to enable debug output.
+//#define DEBUG 1
+
+
 #include "nyansd.h"
 
 #include <iostream>
@@ -72,25 +76,24 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 	msg += (char) type;
 	msg += body;
 	
+#ifdef DEBUG
 	std::cout << "Message length: " << msg.length() << std::endl;
+#endif
 	
 	// Open UDP socket for each interface and send the broadcast message.
 	std::vector<ResponseStruct> buffers;
 	std::map<uint32_t, Poco::Net::NetworkInterface> interfaces = Poco::Net::NetworkInterface::map(true, true);
 	uint32_t ifc_size = interfaces.size();
+	
+#ifdef DEBUG
 	std::cout << "Found " << ifc_size << " network interfaces." << std::endl;
+#endif
 	
 	std::map<uint32_t, Poco::Net::NetworkInterface>::const_iterator it;
 	for (it = interfaces.begin(); it != interfaces.end(); ++it) {
 		const Poco::Net::NetworkInterface& ifc = it->second;
 		
 		std::cerr << "Network interface '" << ifc.displayName() << "'." << std::endl;
-		
-		// FIXME: broadcast check always returns false. Seems useless.
-		/* if (!ifc.supportsBroadcast()) {
-			std::cerr << "Network interface does not support broadcast." << std::endl;
-			continue; 
-		} */
 		
 		if (!ifc.supportsIPv4()) {
 			std::cerr << "Network interface " << it->first << " does not support IPv4." << std::endl;
@@ -117,17 +120,24 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 		
 		std::string ipStr = ip.toString();
 		
+#ifdef DEBUG
 		std::cout << "Modifying IP address: " << ipStr << std::endl;
+#endif
 		
 		// Replace the last digits with '255' to make it into a broadcast address.
 		ipStr.replace(ipStr.find_last_of('.') + 1, 3, "255");
 		
+#ifdef DEBUG
 		std::cout << "Broadcast IP address: " << ipStr << std::endl;
+#endif
 		
 		Poco::Net::DatagramSocket udpsocket(Poco::Net::IPAddress::IPv4);
 		udpsocket.setBroadcast(true);
 		Poco::Net::SocketAddress sa(ipStr, port);
+		
+#ifdef DEBUG
 		std::cout << "Sending..." << std::endl;
+#endif
 		
 		try {
 			udpsocket.sendTo(msg.data(), msg.length(), sa);
@@ -140,8 +150,10 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 			std::cerr << "UDP Socket sendTo: got unknown exception." << std::endl;
 			continue;
 		}
-	 
+		
+#ifdef DEBUG
 		std::cout << "Listening..." << std::endl;
+#endif
 		
 		// Listen for responses for 500 milliseconds.
 		Poco::Timespan ts(500000);	// 500 ms timeout.
@@ -164,7 +176,9 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 				continue;
 			}
 			
+#ifdef DEBUG
 			std::cout << "Received message with length " << rs.length << std::endl;
+#endif
 			
 			buffers.push_back(rs);
 		}
@@ -173,14 +187,18 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 		udpsocket.close();
 	}
 	
+#ifdef DEBUG
 	std::cout << "Parsing " << buffers.size() << " response(s)..." << std::endl;
+#endif
 	
 	// Copy parsed responses into the 'responses' vector.
 	for (int i = 0; i < buffers.size(); ++i) {
 		int n = buffers[i].length;
 		if (n < 8) {
-			// Nothing to do.
+			// Nothing to do.	
+#ifdef DEBUG
 			std::cout << "No responses were received." << std::endl;
+#endif
 			return false;
 		}
 		
@@ -206,18 +224,25 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 				return false;
 			}
 			
+#ifdef DEBUG
 			std::cout << "Found message with length: " << len << std::endl;
+#endif
 			
-			type = *((uint8_t*) &buffer[index++]);		
+			type = *((uint8_t*) &buffer[index++]);
+			
+#ifdef DEBUG
 			std::cout << "Message type: " << (uint16_t) type << std::endl;
+#endif
 			
 			if (type != NYSD_MESSAGE_TYPE_RESPONSE) {
-				std::cout << "Not a response message type. Skipping..." << std::endl;
+				std::cerr << "Not a response message type. Skipping..." << std::endl;
 				continue;
 			}
 			
 			uint8_t rnum = *((char*) &buffer[index++]);		
+#ifdef DEBUG
 			std::cout << "Response count: " << (uint16_t) rnum << std::endl;
+#endif
 			
 			// Service sections.
 			for (int i = 0; i < rnum; ++i) {
@@ -233,7 +258,9 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 				
 				uint8_t ipv6len = *((uint8_t*) &buffer[index++]);
 				
+#ifdef DEBUG
 				std::cout << "IPv6 string with length: " << (uint16_t) ipv6len << std::endl;
+#endif
 				
 				std::string ipv6 = std::string(buffer + index, buffer + (index + ipv6len));
 				index += ipv6len;
@@ -258,7 +285,9 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 				std::string svname = std::string(buffer + index, buffer + (index + snlen));
 				index += snlen;
 				
+#ifdef DEBUG
 				std::cout << "Adding service with name: " << svname << std::endl;
+#endif
 				
 				NYSD_service sv;
 				sv.ipv4 = ipv4;
@@ -279,7 +308,9 @@ bool NyanSD::sendQuery(uint16_t port, std::vector<NYSD_query> queries,
 				responses.push_back(sv);
 			}
 			
+#ifdef DEBUG
 			std::cout << "Buffer: " << index << "/" << n << std::endl;
+#endif
 		}
 			
 		delete[] buffers[i].data;
@@ -348,7 +379,9 @@ std::string NyanSD::ipv4_uintToString(uint32_t ipv4) {
 
 uint32_t NyanSD::ipv4_stringToUint(std::string ipv4) {
 	// String should have the format: DD.DD.DD.DD, where 'DD' is a value between 0-255.
+#ifdef DEBUG
 	std::cout << "IP to convert: " << ipv4 << std::endl;
+#endif
 	uint32_t out;
 	uint8_t* op = (uint8_t*) &out;
 	std::size_t pos = 0;
@@ -361,7 +394,9 @@ uint32_t NyanSD::ipv4_stringToUint(std::string ipv4) {
 		op++;
 	}
 	
+#ifdef DEBUG
 	std::cout << "Converted IP: " << std::showbase << std::hex << out << std::dec << std::endl;
+#endif
 	
 	return out;
 }
@@ -377,7 +412,9 @@ bool remoteToLocalIP(Poco::Net::SocketAddress &sa, uint32_t &ipv4, std::string &
 	if (sa.family() == Poco::Net::IPAddress::IPv4) { isIPv6 = false; }
 	
 	std::string addr = sa.toString();
+#ifdef DEBUG
 	std::cout << "Sender was IP: " << addr << std::endl;
+#endif
 	if (isIPv6) {
 		addr.erase(addr.find_last_of(':') + 1);
 	}
@@ -385,14 +422,21 @@ bool remoteToLocalIP(Poco::Net::SocketAddress &sa, uint32_t &ipv4, std::string &
 		addr.erase(addr.find_last_of('.') + 1);
 	}
 	
+#ifdef DEBUG
 	std::cout << "LAN base IP: " << addr << std::endl;
+#endif
 	for (; it != end; ++it) {
 		const std::size_t count = it->second.addressList().size();
 		for (int i = 0; i < count; ++i) {
 			std::string ip = it->second.address(i).toString();
+			
+#ifdef DEBUG
 			std::cout << "Checking IP: " << ip << std::endl;
+#endif
 			if (addr.compare(0, addr.length(), ip, 0, addr.length()) == 0) {
+#ifdef DEBUG
 				std::cout << "Found IP: " << ip << std::endl;
+#endif
 				if (isIPv6) {
 					ipv6 = it->second.address(i).toString();
 					
@@ -430,7 +474,9 @@ bool remoteToLocalIP(Poco::Net::SocketAddress &sa, uint32_t &ipv4, std::string &
 		}
 	}
 	
+#ifdef DEBUG
 	std::cout << "LAN IP not found on interfaces." << std::endl;
+#endif
 	
 	return false;
 }
@@ -465,7 +511,9 @@ void NyanSD::clientHandler(uint16_t port) {
 				continue;
 			}
 			
+#ifdef DEBUG
 			std::cout << "Message length: " << n << std::endl;
+#endif
 			
 			// Validate signature.
 			int index = 0;
@@ -485,17 +533,21 @@ void NyanSD::clientHandler(uint16_t port) {
 				continue;
 			}
 		
-			uint8_t type = *((uint8_t*) &buffer[index++]);		
+			uint8_t type = *((uint8_t*) &buffer[index++]);
+#ifdef DEBUG
 			std::cout << "Message type: " << (uint16_t) type << std::endl;
+#endif
 			if (type != NYSD_MESSAGE_TYPE_BROADCAST) {
-				std::cout << "Not a broadcast message type. Skipping..." << std::endl;
+				std::cerr << "Not a broadcast message type. Skipping..." << std::endl;
 				continue;
 			}
 			
 			// Parse message for queries.
 			BBEndianness he = bb.getHostEndian();
-			uint8_t rnum = *((char*) &buffer[index++]);		
+			uint8_t rnum = *((char*) &buffer[index++]);
+#ifdef DEBUG
 			std::cout << "Query count: " << (uint16_t) rnum << std::endl;
+#endif
 			
 			if (rnum == 0) {
 				std::cerr << "Broadcast message didn't contain any queries. Skipping..." << std::endl;
@@ -630,7 +682,9 @@ void NyanSD::clientHandler(uint16_t port) {
 					servicesMutex.unlock();
 				}
 				
+#ifdef DEBUG
 				std::cout <<"Services body generated of size: " << servicesBody.length() << std::endl;
+#endif
 				
 				// Assemble the full response message.
 				std::string msg = "NYANSD";
@@ -644,7 +698,9 @@ void NyanSD::clientHandler(uint16_t port) {
 				msg += std::string((char*) &scount, 1);
 				msg += servicesBody;
 				
+#ifdef DEBUG
 				std::cout << "Sending response with size: " << msg.length() << std::endl;
+#endif
 				
 				int n = udpsocket.sendTo(msg.data(), msg.length(), sender);
 			}
@@ -652,5 +708,4 @@ void NyanSD::clientHandler(uint16_t port) {
 	}
 	
 	// Clean up resources and return.
-	
 }
