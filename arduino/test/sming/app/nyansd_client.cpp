@@ -61,7 +61,7 @@ struct ResponseStruct {
 // const ip_addr_t* addr 	- Address of sender 
 // uint16_t port			- Sender port
 void NyanSD_client::udp_receive_callback(void* arg, struct udp_pcb* upcb,  struct pbuf* p, 
-													ip_addr_t* addr, uint16_t port) { 
+													PCONST ip_addr_t* addr, uint16_t port) { 
 							
 	// Process datagram here (non-blocking code).
 	// Copy data to global buffer, set flag.
@@ -148,7 +148,7 @@ bool NyanSD_client::sendQuery(uint16_t port, NYSD_query* queries, uint8_t qnum,
 	memcpy(p->payload, msg.c_str(), length);
 	p->len = length;
 	p->tot_len = length;
-	wr_err = udp_sendto(udpsocket, p, IP_ADDR_BROADCAST, 10);
+	wr_err = udp_sendto(udpsocket, p, IP_ADDR_BROADCAST, port);
 	if (wr_err != ERR_OK) {
 		//wr_err = udp_sendto(udpsocket,p, IP_ADDR_BROADCAST, 10);
 		return false;
@@ -267,8 +267,8 @@ bool NyanSD_client::sendQuery(uint16_t port, NYSD_query* queries, uint8_t qnum,
 				memcpy(&hostname, buffer + index, hostlen);
 				index += hostlen;
 				
-				uint16_t port;
-				memcpy(&port, (buffer + index), 2);
+				uint16_t p;	// port
+				memcpy(&p, (buffer + index), 2);
 				index += 2;
 				
 				uint8_t prot = *((uint8_t*) (buffer + index));
@@ -291,7 +291,7 @@ bool NyanSD_client::sendQuery(uint16_t port, NYSD_query* queries, uint8_t qnum,
 				NYSD_service sv;
 				sv.ipv4 = ipv4;
 				sv.ipv6 = ipv6;
-				sv.port = port;
+				sv.port = p;
 				sv.hostname = hostname;
 				sv.service = svname;
 				if (prot == NYSD_PROTOCOL_ALL) {

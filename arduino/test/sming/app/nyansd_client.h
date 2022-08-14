@@ -70,6 +70,11 @@ struct ServiceNode {
 };
 
 
+#if defined __linux__ || defined _WIN32
+#define PCONST const
+#endif
+
+
 class NyanSD_client {
 	//static std::vector<NYSD_service> services;
 	//static std::mutex servicesMutex;
@@ -85,7 +90,7 @@ class NyanSD_client {
 	//static void clientHandler(uint16_t port);
 	
 	static void udp_receive_callback(void* arg, struct udp_pcb* upcb,  struct pbuf* p, 
-													ip_addr_t* addr, uint16_t port);
+													PCONST ip_addr_t* addr, uint16_t port);
 	
 public:
 	/*static bool sendQuery(uint16_t port, std::vector<NYSD_query> queries, 
