@@ -96,8 +96,8 @@ void startMqttClient()
 		// Start publishing message now
 		publishMessage();
 		
-		// Schedule a timer to send messages every 5 seconds
-		//procTimer.initializeMs(5 * 1000, publishMessage).start();
+		// Schedule a timer to send messages every 10 seconds
+		procTimer.initializeMs(10 * 1000, publishMessage).start();
 		return 0;
 	});
 
@@ -137,7 +137,7 @@ void onConnected(IpAddress ip, IpAddress netmask, IpAddress gateway)
 	uint32_t resnum;
 	if (!NyanSD_client::sendQuery(port, &query, qnum, responses, resnum)) {
 		// Handle error.
-		Serial.println(_F("Failed to find an MQTT server..."));
+		Serial.println(_F("Failed to query for an MQTT server..."));
 	}
 	
 	// Process received responses, we should have just a single MQTT server. Pick the first one
@@ -145,10 +145,13 @@ void onConnected(IpAddress ip, IpAddress netmask, IpAddress gateway)
 	if (resnum < 1) {
 		// No MQTT server found. Abort connecting.
 		Serial.println(_F("Failed to find an MQTT server..."));
-		return;
+		while(1) { };
 	}
 	
 	String ipv4 = NyanSD_client::ipv4_uintToString(responses->service.ipv4);
+	
+	// Print IP.
+	Serial.println(_F("Found MQTT server at: ") + ipv4);
 	
 	// Build MQTT URL.
 	// Format: mqtt://<ipv4>:<port>

@@ -71,7 +71,9 @@ struct ServiceNode {
 
 
 #if defined __linux__ || defined _WIN32
-#define PCONST const
+	#define PCONST const
+#else
+	#define PCONST
 #endif
 
 
