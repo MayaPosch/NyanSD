@@ -5,10 +5,10 @@
 
 
 // If you want, you can define WiFi settings globally in Eclipse Environment Variables
-#ifndef WIFI_SSID
+/* #ifndef WIFI_SSID
 #define WIFI_SSID "PleaseEnterSSID" // Put your SSID and password here
 #define WIFI_PWD "PleaseEnterPass"
-#endif
+#endif */
 
 // For testing purposes, try a few different URL formats
 #define MQTT_URL1 "mqtt://test.mosquitto.org:1883"
@@ -134,10 +134,11 @@ void onConnected(IpAddress ip, IpAddress netmask, IpAddress gateway)
 	query.length = 4;
 	uint8_t qnum = 1;
 	ServiceNode* responses = 0;
-	uint32_t resnum;
-	if (!NyanSD_client::sendQuery(port, &query, qnum, responses, resnum)) {
+	uint32_t resnum = 0;
+	uint32_t res = NyanSD_client::sendQuery(port, &query, qnum, responses, resnum);
+	if (res != 0) {
 		// Handle error.
-		Serial.println(_F("Failed to query for an MQTT server..."));
+		Serial.println(_F("Failed to query for an MQTT server: ") + String(res));
 	}
 	
 	// Process received responses, we should have just a single MQTT server. Pick the first one
@@ -159,6 +160,8 @@ void onConnected(IpAddress ip, IpAddress netmask, IpAddress gateway)
 	mqtt_url += ipv4;
 	mqtt_url += ":";
 	mqtt_url.concat(responses->service.port);
+	
+	Serial.println(_F("MQTT URL: ") + mqtt_url);
 	
 	// Clean up NyanSD query resources.
 	while (responses->next != 0) {

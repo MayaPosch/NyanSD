@@ -97,7 +97,7 @@ class NyanSD_client {
 public:
 	/*static bool sendQuery(uint16_t port, std::vector<NYSD_query> queries, 
 										std::vector<NYSD_service> &responses);*/
-	static bool sendQuery(uint16_t port, NYSD_query* queries, uint8_t qnum,
+	static uint32_t sendQuery(uint16_t port, NYSD_query* queries, uint8_t qnum,
 											ServiceNode* responses, uint32_t &resnum);
 	//static bool addService(NYSD_service service);
 	//static bool startListener(uint16_t port);

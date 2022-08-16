@@ -90,15 +90,15 @@ void NyanSD_client::udp_receive_callback(void* arg, struct udp_pcb* upcb,  struc
 
 
 // --- SEND QUERY ---
-bool NyanSD_client::sendQuery(uint16_t port, NYSD_query* queries, uint8_t qnum,
+uint32_t NyanSD_client::sendQuery(uint16_t port, NYSD_query* queries, uint8_t qnum,
 										ServiceNode* responses, uint32_t &resnum) {
 	if (qnum > 255) {
 		//std::cerr << "No more than 255 queries can be send simultaneously." << std::endl;
-		return false;
+		return 1;
 	}
 	else if (qnum < 1) {
 		//std::cerr << "At least one query must be sent. No query found." << std::endl;
-		return false;
+		return 2;
 	}
 				
 	// Compose the NYSD message.
@@ -143,15 +143,18 @@ bool NyanSD_client::sendQuery(uint16_t port, NYSD_query* queries, uint8_t qnum,
 	
 	wr_err = udp_bind(udpsocket, IP_ADDR_ANY, 0);
 	wr_err = udp_connect(udpsocket, IP_ADDR_ANY, 10);
-	if (wr_err != ERR_OK) { return false; }
+	if (wr_err != ERR_OK) { return 3; }
 	
 	memcpy(p->payload, msg.c_str(), length);
 	p->len = length;
 	p->tot_len = length;
 	wr_err = udp_sendto(udpsocket, p, IP_ADDR_BROADCAST, port);
 	if (wr_err != ERR_OK) {
+		if (wr_err == ERR_MEM) { return 4; }
+		else if (wr_err == ERR_RTE) { return 5; }
+		else if (wr_err == ERR_VAL) { return 6; }
 		//wr_err = udp_sendto(udpsocket,p, IP_ADDR_BROADCAST, 10);
-		return false;
+		return 7;
 	}
 	
 	pbuf_free(p);
@@ -164,11 +167,11 @@ bool NyanSD_client::sendQuery(uint16_t port, NYSD_query* queries, uint8_t qnum,
 		
 		
 	// Wait for the receive callback to be called. Wait for a maximum of 200 ms.
-	delay(200);
+	delay(1000);
 		
 	if (!received) {
 		// No responses. Return false.
-		return false;
+		return 8;
 	}
 				
 	// Close socket as we're done with this interface.
@@ -200,7 +203,7 @@ bool NyanSD_client::sendQuery(uint16_t port, NYSD_query* queries, uint8_t qnum,
 			//if (signature != "NYANSD") {
 			if (strncmp((char*) &signature, "NYANSD", 6) == 0) {
 				//std::cerr << "Signature of message incorrect: " << signature << std::endl;
-				return false;
+				return 9;
 			}
 			
 			//len = *((uint16_t*) &buffer[index]);
@@ -212,7 +215,7 @@ bool NyanSD_client::sendQuery(uint16_t port, NYSD_query* queries, uint8_t qnum,
 			if (len > (response->length - index)) {
 				//std::cerr << "Insufficient data in buffer to finish parsing message: " << len << "/" 
 					//		<< (buffers[i].length - (index + 6)) << std::endl;
-				return false;
+				return 10;
 			}
 			
 #ifdef DEBUG
@@ -240,7 +243,7 @@ bool NyanSD_client::sendQuery(uint16_t port, NYSD_query* queries, uint8_t qnum,
 			for (int i = 0; i < rnum; ++i) {
 				if (buffer[index] != 'S') {
 					//std::cerr << "Invalid service section signature. Aborting parsing." << std::endl;
-					return false;
+					return 11;
 				}
 				
 				index++;
@@ -331,7 +334,7 @@ bool NyanSD_client::sendQuery(uint16_t port, NYSD_query* queries, uint8_t qnum,
 		delete old;
 	}
 	
-	return true;
+	return 0;
 }
 
 
@@ -340,7 +343,8 @@ String NyanSD_client::ipv4_uintToString(uint32_t ipv4) {
 	String out;
 	for (int i = 0; i < 4; ++i) {
 		//out += std::to_string(*(((uint8_t*) &ipv4) + i));
-		out.concat('0' + *((uint8_t*) &ipv4) + 1);
+		int ch = *(((uint8_t*) &ipv4) + i);
+		out.concat(('0' + ch));
 		if (i < 3) { out += "."; }
 	}
 	
