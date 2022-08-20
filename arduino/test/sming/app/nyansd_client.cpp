@@ -102,7 +102,6 @@ uint32_t NyanSD_client::sendQuery(uint16_t port, NYSD_query* queries, uint8_t qn
 	}
 				
 	// Compose the NYSD message.
-	//BBEndianness he = bb.getHostEndian();
 	String msg = String("NYANSD");
 	//char msg[] = { 'N', 'Y', 'A', 'N', 'S', 'D' };
 	uint16_t len = 0;
@@ -127,7 +126,6 @@ uint32_t NyanSD_client::sendQuery(uint16_t port, NYSD_query* queries, uint8_t qn
 	}
 	
 	len = body.length() + 1;	// Add one byte for the message type.
-	//len = bb.toGlobal(len, he);
 	msg += String((char) *((char*) &len));
 	msg += String((char) *(((char*) &len) + 1));
 	msg += (char) type;
@@ -139,16 +137,20 @@ uint32_t NyanSD_client::sendQuery(uint16_t port, NYSD_query* queries, uint8_t qn
 	struct pbuf* p = pbuf_alloc(PBUF_TRANSPORT, length, PBUF_RAM);
 	udp_pcb* udpsocket = udp_new();
 	//ip_set_option(udpsocket, SOF_BROADCAST);
-	udpsocket->so_options |= SOF_BROADCAST;
+	//udpsocket->so_options |= SOF_BROADCAST;
+	
+	// Get broadcast IP.
+	IpAddress bip = WifiStation.getIP();
+	bip[3] = 255;
 	
 	wr_err = udp_bind(udpsocket, IP_ADDR_ANY, 0);
-	wr_err = udp_connect(udpsocket, IP_ADDR_ANY, 10);
+	wr_err = udp_connect(udpsocket, bip, port);
 	if (wr_err != ERR_OK) { return 3; }
 	
 	memcpy(p->payload, msg.c_str(), length);
 	p->len = length;
 	p->tot_len = length;
-	wr_err = udp_sendto(udpsocket, p, IP_ADDR_BROADCAST, port);
+	wr_err = udp_sendto(udpsocket, p, bip, port);
 	if (wr_err != ERR_OK) {
 		if (wr_err == ERR_MEM) { return 4; }
 		else if (wr_err == ERR_RTE) { return 5; }
@@ -167,12 +169,18 @@ uint32_t NyanSD_client::sendQuery(uint16_t port, NYSD_query* queries, uint8_t qn
 		
 		
 	// Wait for the receive callback to be called. Wait for a maximum of 200 ms.
-	delay(1000);
+	//delay(5000);
+	int timeout = 5000; // 5 seconds
+	while (!received) {
+		delay(1);
+		timeout--;
+		if (timeout < 1) { return 8; }
+	}
 		
-	if (!received) {
+	/* if (!received) {
 		// No responses. Return false.
 		return 8;
-	}
+	} */
 				
 	// Close socket as we're done with this interface.
 	//udpsocket.close();
