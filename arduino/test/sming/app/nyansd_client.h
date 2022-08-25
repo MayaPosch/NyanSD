@@ -65,7 +65,7 @@ struct ListNode {
 
 
 struct ServiceNode {
-	NYSD_service service;
+	NYSD_service* service;
 	ServiceNode* next;
 };
 
@@ -75,6 +75,9 @@ struct ServiceNode {
 #else
 	#define PCONST
 #endif
+
+
+extern UdpConnection udpsocket;
 
 
 class NyanSD_client {
@@ -88,17 +91,22 @@ class NyanSD_client {
 	static ListNode* last;
 	static int count;
 	static bool received;
+	static uint16_t port;
+	static UdpConnection udpsocket;
 	
 	//static void clientHandler(uint16_t port);
 	
-	static void udp_receive_callback(void* arg, struct udp_pcb* upcb,  struct pbuf* p, 
-													PCONST ip_addr_t* addr, uint16_t port);
-	
 public:
+	
+	/* static void udp_receive_callback(void* arg, struct udp_pcb* upcb,  struct pbuf* p, 
+													PCONST ip_addr_t* addr, uint16_t port); */
+	static void udp_receive_callback(UdpConnection& connection, char* data, int size, 
+													IpAddress remoteIP, uint16_t remotePort);
 	/*static bool sendQuery(uint16_t port, std::vector<NYSD_query> queries, 
 										std::vector<NYSD_service> &responses);*/
-	static uint32_t sendQuery(uint16_t port, NYSD_query* queries, uint8_t qnum,
-											ServiceNode* responses, uint32_t &resnum);
+	static uint32_t sendQuery(uint16_t port, NYSD_query* queries, uint8_t qnum);
+	static uint32_t getResponses(ServiceNode* &responses, uint32_t &resnum);
+	static bool hasResponse() { return (count > 0) ? true : false; }
 	//static bool addService(NYSD_service service);
 	//static bool startListener(uint16_t port);
 	//static bool stopListener();

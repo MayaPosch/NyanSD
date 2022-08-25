@@ -30,6 +30,8 @@ void startMqttClient();
 MqttClient mqtt;
 Timer procTimer;
 String mqtt_url;
+//UdpConnection udpsocket(NyanSD_client::udp_receive_callback);
+uint32_t count = 0;
 
 // Check for MQTT Disconnection
 void checkMQTTDisconnect(TcpClient& client, bool flag)
@@ -121,35 +123,53 @@ void startMqttClient()
 	mqtt.subscribe(F("main/status/#"));
 }
 
-void onConnected(IpAddress ip, IpAddress netmask, IpAddress gateway)
-{
-	Serial.println(_F("WIFI connected. Starting MQTT client..."));
+
+/* void sendMessage() {
+	IpAddress remoteIP(192, 168, 31, 102);
+	String text("Hi.");
+	text.concat(count++);
+	uint16_t remotePort = 11310;
+	udpsocket.sendStringTo(remoteIP, remotePort, text);
+} */
+
+
+void checkResponses() {
+	procTimer.stop();
 	
-	// TODO: Use NyanSD to fetch the MQTT broker IP & port.
-	uint16_t port = 11310;
-	NYSD_query query;
-	query.protocol = NYSD_PROTOCOL_ALL;
-	char filter[] = "mqtt";
-	query.filter = (char*) &filter;
-	query.length = 4;
-	uint8_t qnum = 1;
+	if (!NyanSD_client::hasResponse()) {
+		// Bail out.
+		Serial.println(_F("Got no NyanSD responses for MQTT broker query."));
+		return;
+	}
+	
+	Serial.println(_F("Reading NyanSD responses for MQTT broker query..."));
+	
 	ServiceNode* responses = 0;
 	uint32_t resnum = 0;
-	uint32_t res = NyanSD_client::sendQuery(port, &query, qnum, responses, resnum);
+	uint32_t res = NyanSD_client::getResponses(responses, resnum);
 	if (res != 0) {
 		// Handle error.
-		Serial.println(_F("Failed to query for an MQTT server: ") + String(res));
+		Serial.println(_F("Failed to get NyanSD responses: ") + String(res));
+		return;
 	}
 	
 	// Process received responses, we should have just a single MQTT server. Pick the first one
 	// regardless.
-	if (resnum < 1) {
+	if (resnum == 0) {
 		// No MQTT server found. Abort connecting.
 		Serial.println(_F("Failed to find an MQTT server..."));
-		while(1) { };
+		return;
 	}
 	
-	String ipv4 = NyanSD_client::ipv4_uintToString(responses->service.ipv4);
+	if (responses == 0) {
+		Serial.println(_F("Responses is a null pointer."));
+		return;
+	}
+	
+	Serial.println(_F("Converting MQTT broker IPv4 address."));
+	Serial.println(_F("IPv4 address: ") + String(responses->service->ipv4));
+	
+	String ipv4 = NyanSD_client::ipv4_uintToString(responses->service->ipv4);
 	
 	// Print IP.
 	Serial.println(_F("Found MQTT server at: ") + ipv4);
@@ -159,7 +179,7 @@ void onConnected(IpAddress ip, IpAddress netmask, IpAddress gateway)
 	mqtt_url = "mqtt://";
 	mqtt_url += ipv4;
 	mqtt_url += ":";
-	mqtt_url.concat(responses->service.port);
+	mqtt_url.concat(responses->service->port);
 	
 	Serial.println(_F("MQTT URL: ") + mqtt_url);
 	
@@ -167,6 +187,10 @@ void onConnected(IpAddress ip, IpAddress netmask, IpAddress gateway)
 	while (responses->next != 0) {
 		ServiceNode* oldn = responses;
 		responses = responses->next;
+		delete[] oldn->service->ipv6;
+		delete[] oldn->service->hostname;
+		delete[] oldn->service->service;
+		delete oldn->service;
 		delete oldn;
 	}
 	
@@ -174,6 +198,37 @@ void onConnected(IpAddress ip, IpAddress netmask, IpAddress gateway)
 
 	// Run MQTT client
 	startMqttClient();
+}
+
+
+void onConnected(IpAddress ip, IpAddress netmask, IpAddress gateway) {
+	Serial.println(_F("WIFI connected. Starting MQTT client..."));
+	
+	//sendMessage();
+	
+	//procTimer.initializeMs(10 * 1000, sendMessage).start();
+	
+	/* while (1) {
+		delay(5000);
+		Serial.println(_F("Idle..."));
+	} */
+	
+	// TODO: Use NyanSD to fetch the MQTT broker IP & port.
+	uint16_t port = 11310;
+	NYSD_query query;
+	query.protocol = NYSD_PROTOCOL_ALL;
+	char filter[] = "mqtt";
+	query.filter = (char*) &filter;
+	query.length = 4;
+	uint8_t qnum = 1;
+	uint32_t res = NyanSD_client::sendQuery(port, &query, qnum); //, responses, resnum);
+	if (res != 0) {
+		// Handle error.
+		Serial.println(_F("Failed to query for an MQTT server: ") + String(res));
+		return;
+	}
+	
+	procTimer.initializeMs(500, checkResponses).start();
 }
 
 void init()
