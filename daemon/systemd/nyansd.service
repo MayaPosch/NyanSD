@@ -2,8 +2,7 @@
 Description=NyanSD service discovery server
 
 [Service]
-ExecStart=/usr/local/bin/nyansd
-User=pi
+ExecStart=/usr/local/bin/nyansdd
 Restart=always
 RestartSec=5
 
