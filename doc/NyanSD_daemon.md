@@ -17,6 +17,8 @@ Or for OpenRC:
 
 `make install-daemon-openrc`
 
+The daemon service is started on the next boot, or when started manually.
+
 ## Adding services ##
 
 A service file consists out of a simple file in INI format. It can contain many services. E.g.:
@@ -39,6 +41,11 @@ protocol=tcp
 name=ssld
 port=22
 protocol=udp
+
+[mqtt]
+name=mqtt
+port=1883
+protocol=tcp
 </pre>
 
 The above example lists all of the possible properties. Of these, only the service name, the port number and the protocol (TCP, UDP or both) are required. The other properties are obtained from the host which the daemon runs on. Each bracketed section is required to have a unique name.
