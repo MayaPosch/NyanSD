@@ -17,7 +17,7 @@ Or for OpenRC:
 
 `make install-daemon-openrc`
 
-The daemon service is started on the next boot, or when started manually.
+The daemon service still has to be enabled at this point, after which it is started on the next boot, or when started manually.
 
 ## Adding services ##
 
