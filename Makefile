@@ -74,6 +74,14 @@ daemon:
 install-daemon:
 	$(MAKE) -C ./daemon install
 	
+install-daemon-systemd:
+	$(MAKE) -C ./daemon install
+	$(MAKE) -C ./daemon install-systemd
+
+install-daemon-openrc:
+	$(MAKE) -C ./daemon install
+	$(MAKE) -C ./daemon install-openrc
+	
 browse:
 	$(MAKE) -C ./browse
 	
