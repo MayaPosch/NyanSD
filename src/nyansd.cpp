@@ -437,13 +437,7 @@ bool remoteToLocalIP(Poco::Net::SocketAddress &sa, uint32_t &ipv4, std::string &
 #ifdef DEBUG
 				std::cout << "Found IP: " << ip << std::endl;
 #endif
-				if (isIPv6) {
-					ipv6 = it->second.address(i).toString();
-					
-					// Remove trailing '%<if>' section on certain OSes.
-					std::string::size_type st = ipv6.find_last_of('%');
-					if (st != std::string::npos) { ipv6.erase(st); }
-					
+				if (!isIPv6) {
 					// Find first IPv4 address on this network interface.
 					for (int j = 0; j < count; ++j) {
 						if (it->second.address(j).af() == AF_INET) {
@@ -453,8 +447,6 @@ bool remoteToLocalIP(Poco::Net::SocketAddress &sa, uint32_t &ipv4, std::string &
 					}
 				}
 				else {
-					ipv4 = NyanSD::ipv4_stringToUint(it->second.address(i).toString());
-					
 					// Find first IPv6 address on this network interface.
 					for (int j = 0; j < count; ++j) {
 						if (it->second.address(j).af() == AF_INET6) {
